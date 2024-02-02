@@ -1,31 +1,59 @@
 import socket
+import tkinter as tk
+from tkinter import simpledialog
 
-# Server configuration
-HOST = '0.0.0.0'  # Listen on all available interfaces
-PORT = 5555
+class AdminServer:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.clients = []
 
-# Create a socket to listen for incoming connections
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-    server_socket.bind((HOST, PORT))
-    server_socket.listen()
+        # Set up the server socket
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind((self.host, self.port))
+        self.server_socket.listen()
 
-    print(f"Admin Server listening on {HOST}:{PORT}")
+        print(f"Admin Server listening on {self.host}:{self.port}")
 
-    # Accept incoming connections
-    conn, addr = server_socket.accept()
+        # Start a separate thread for the server
+        import threading
+        threading.Thread(target=self.start_server, daemon=True).start()
 
-    with conn:
-        print(f"Connected by {addr}")
+    def broadcast_message(self, message):
+        for client in self.clients:
+            try:
+                client.sendall(message.encode('utf-8'))
+            except Exception as e:
+                print(f"Error broadcasting message to client: {e}")
 
+    def start_server(self):
         while True:
-            # Receive a message from the administrator
-            message = conn.recv(1024).decode('utf-8')
+            conn, addr = self.server_socket.accept()
+            self.clients.append(conn)
+            print(f"Connected by {addr}")
 
-            if not message:
-                break
+class AdminUI:
+    def __init__(self, admin_server):
+        self.admin_server = admin_server
+        self.root = tk.Tk()
 
-            print(f"Admin Message: {message}")
+        # Set up Tkinter UI
+        self.root.title("Admin UI")
+        self.message_entry = tk.Entry(self.root)
+        self.message_entry.pack(pady=10)
+        self.send_button = tk.Button(self.root, text="Send Message", command=self.send_message)
+        self.send_button.pack()
 
-            # Broadcast the message to all connected clients (you need to implement this part)
-            # You can maintain a list of connected clients and send the message to each of them
-            # using their individual sockets.
+    def send_message(self):
+        message = self.message_entry.get()
+        self.admin_server.broadcast_message(message)
+        self.message_entry.delete(0, tk.END)
+        tk.messagebox.showinfo("Message Sent", "Message sent to all clients.")
+
+    def run(self):
+        self.root.mainloop()
+
+if __name__ == '__main__':
+    admin_server = AdminServer('0.0.0.0', 5555)
+    admin_ui = AdminUI(admin_server)
+    admin_ui.run()

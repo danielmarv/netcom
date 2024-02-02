@@ -1,26 +1,39 @@
 import socket
-import threading
+import tkinter as tk
+from tkinter import messagebox
 
-# Server configuration
-SERVER_HOST = 'your_server_ip'  # Replace with the IP address of the admin server
-SERVER_PORT = 5555
+class UserClient:
+    def __init__(self, server_host, server_port):
+        self.server_host = server_host
+        self.server_port = server_port
 
-# Create a socket to connect to the admin server
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-    client_socket.connect((SERVER_HOST, SERVER_PORT))
+        self.root = tk.Tk()
 
-    def receive_messages():
-        while True:
-            # Receive and display messages from the admin
-            message = client_socket.recv(1024).decode('utf-8')
-            print(f"Received Message: {message}")
+        # Set up Tkinter UI
+        self.root.title("User Client")
+        self.message_label = tk.Label(self.root, text="Received Messages:")
+        self.message_label.pack(pady=10)
+        self.message_text = tk.Text(self.root, height=10, width=40)
+        self.message_text.pack()
 
-    # Start a separate thread to continuously receive messages
-    threading.Thread(target=receive_messages, daemon=True).start()
+        # Start a separate thread to continuously receive messages
+        import threading
+        threading.Thread(target=self.receive_messages, daemon=True).start()
 
-    # The main thread can be used for user input or any other functionality
+    def receive_messages(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+            client_socket.connect((self.server_host, self.server_port))
 
-    # Example: Send a message to the admin
-    while True:
-        user_input = input("Enter your message: ")
-        client_socket.sendall(user_input.encode('utf-8'))
+            while True:
+                # Receive and display messages
+                message = client_socket.recv(1024).decode('utf-8')
+                if not message:
+                    break
+
+                # Display the message in the Tkinter Text widget
+                self.message_text.insert(tk.END, message + '\n')
+                self.message_text.see(tk.END)
+
+if __name__ == '__main__':
+    user_client = UserClient('your_server_ip', 5555)
+    user_client.root.mainloop()
