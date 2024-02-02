@@ -49,5 +49,5 @@ class UserClient:
                 )
 
 if __name__ == '__main__':
-    user_client = UserClient('your_server_ip', 5555)
+    user_client = UserClient('172.24.0.1', 5555)
     user_client.root.mainloop()
