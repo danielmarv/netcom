@@ -1,6 +1,6 @@
 import socket
 import tkinter as tk
-from tkinter import simpledialog
+from tkinter import ttk, simpledialog
 
 class AdminServer:
     def __init__(self, host, port):
@@ -39,10 +39,14 @@ class AdminUI:
 
         # Set up Tkinter UI
         self.root.title("Admin UI")
-        self.message_entry = tk.Entry(self.root)
-        self.message_entry.pack(pady=10)
-        self.send_button = tk.Button(self.root, text="Send Message", command=self.send_message)
-        self.send_button.pack()
+        self.style = ttk.Style(self.root)
+        self.style.theme_use("clam")  # You can try different themes like "scidblue", "vista", etc.
+
+        self.message_entry = ttk.Entry(self.root, font=('Helvetica', 12))
+        self.message_entry.pack(pady=10, padx=20, ipady=5, fill='x')
+
+        self.send_button = ttk.Button(self.root, text="Send Message", command=self.send_message)
+        self.send_button.pack(pady=10, padx=20, ipady=5, fill='x')
 
     def send_message(self):
         message = self.message_entry.get()
